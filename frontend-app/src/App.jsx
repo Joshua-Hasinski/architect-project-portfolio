@@ -1,12 +1,10 @@
-// In frontend-app/src/App.jsx
-
 import { useState, useEffect } from 'react';
 import './App.css';
 
 // 1. Define the API URL based on the environment
 const API_URL = import.meta.env.DEV
-  ? 'http://127.0.0.1:8000' // Your local FastAPI server URL
-  : import.meta.env.VITE_API_URL; // The deployed URL from Render
+  ? 'http://127.0.0.1:8000' // For local development
+  : import.meta.env.VITE_API_URL; // For the deployed site on Render
 
 function App() {
   const [projectData, setProjectData] = useState(null);
@@ -17,12 +15,37 @@ function App() {
     // 2. Use the API_URL variable in your fetch call
     fetch(`${API_URL}/data`)
       .then(response => {
-        // ... (rest of the fetch logic is the same)
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
       })
-      // ...
+      .then(data => {
+        setProjectData(data);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        setError(error.message);
+        setIsLoading(false);
+      });
   }, []);
 
-  // ... (rest of your component is the same)
+  if (isLoading) {
+    return <div>Loading data from the API...</div>;
+  }
+
+  if (error) {
+    return <div>Error fetching data: {error}</div>;
+  }
+
+  // 3. Render the data once it's loaded
+  return (
+    <div>
+      <h1>{projectData.name}</h1>
+      <p>Version: {projectData.version}</p>
+      <p>Location: {projectData.location}</p>
+    </div>
+  );
 }
 
 export default App;
